@@ -42,23 +42,12 @@ jobs:
       # 5. 状态回写 - 将更新后的 news_history.json 提交回仓库
       - name: Commit and push history file
         run: |
-          # 配置 git 用户信息（使用 github-actions 机器人）
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # 配置 git 用户信息
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
 
-          # 检查文件是否存在且有更改
-          if [ ! -f news_history.json ]; then
-            echo "news_history.json 不存在，跳过提交"
-            exit 0
-          fi
+          # 添加历史记录文件
+          git add news_history.json
 
-          # 检查是否有更改
-          if git diff --quiet news_history.json 2>/dev/null && git diff --cached --quiet news_history.json 2>/dev/null; then
-            echo "news_history.json 没有变化，跳过提交"
-          else
-            echo "检测到 news_history.json 变化，准备提交..."
-            git add news_history.json
-            git commit -m "chore: update news history [$(date +%Y-%m-%d)]"
-            git push
-            echo "已成功推送到远程仓库"
-          fi
+          # 检查是否有实质修改，有则提交并推送（带防冲突处理）
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update history [skip ci]" && git pull --rebase && git push origin main)
