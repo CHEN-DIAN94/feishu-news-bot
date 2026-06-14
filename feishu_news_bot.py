@@ -9,10 +9,12 @@
 import json
 import logging
 import os
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
 
+import feedparser
 import requests
 from bs4 import BeautifulSoup
 
@@ -36,16 +38,16 @@ HEADERS = {
 
 def fetch_news_primary() -> list[dict]:
     """
-    主渠道：调用免费API获取百度热搜新闻
-    接口地址：https://api.vvhan.com/api/hotlist/baidu
+    主渠道：调用免费API获取36氪全网热榜
+    接口地址：https://api.vvhan.com/api/hotlist/36Ke
 
     Returns:
         list[dict]: 包含 title, url, summary 的字典列表，失败返回 []
     """
     try:
-        logger.info("[主渠道] 正在调用 vvhan API...")
+        logger.info("[主渠道] 正在调用 vvhan 36氪 API...")
         response = requests.get(
-            "https://api.vvhan.com/api/hotlist/baidu",
+            "https://api.vvhan.com/api/hotlist/36Ke",
             headers=HEADERS,
             timeout=15
         )
@@ -79,44 +81,37 @@ def fetch_news_primary() -> list[dict]:
 
 def fetch_news_fallback() -> list[dict]:
     """
-    备用渠道：爬取百度热搜页面
-    地址：https://top.baidu.com/board?tab=realtime
+    备用渠道：解析36氪RSS订阅源
+    地址：https://36kr.com/feed
 
     Returns:
         list[dict]: 包含 title, url, summary 的字典列表，失败返回 []
     """
     try:
-        logger.info("[备用渠道] 正在爬取百度热搜页面...")
-        response = requests.get(
-            "https://top.baidu.com/board?tab=realtime",
-            headers=HEADERS,
-            timeout=15
-        )
+        logger.info("[备用渠道] 正在解析36氪RSS订阅源...")
+        feed = feedparser.parse("https://36kr.com/feed")
 
-        if response.status_code != 200:
-            logger.warning(f"[备用渠道] HTTP请求失败，状态码: {response.status_code}")
+        if feed.bozo and not feed.entries:
+            logger.warning(f"[备用渠道] RSS解析失败: {feed.bozo_exception}")
             return []
 
-        soup = BeautifulSoup(response.text, "html.parser")
         news_list = []
+        for entry in feed.entries[:TOP_N]:
+            title = entry.get("title", "").strip()
+            url = entry.get("link", "")
 
-        # 查找热搜条目
-        items = soup.select("div.category-wrap_iQLoo")
-
-        for item in items[:TOP_N]:
-            # 提取标题
-            title_el = item.select_one("div.c-single-text-ellipsis")
-            if not title_el:
-                continue
-            title = title_el.get_text(strip=True)
-
-            # 提取链接
-            link_el = item.select_one("a.title_dIF3B")
-            url = link_el.get("href", "") if link_el else ""
-
-            # 提取摘要（备用渠道无摘要，使用默认值）
-            summary_el = item.select_one("div.hot-desc_1m_jR")
-            summary = summary_el.get_text(strip=True) if summary_el else "暂无摘要"
+            # 提取并清理摘要中的HTML标签
+            summary_raw = entry.get("summary", entry.get("description", ""))
+            if summary_raw:
+                # 使用BeautifulSoup清理HTML标签
+                summary_text = BeautifulSoup(summary_raw, "html.parser").get_text()
+                # 清理多余空白字符
+                summary = re.sub(r'\s+', ' ', summary_text).strip()
+                # 截取前100字符避免过长
+                if len(summary) > 100:
+                    summary = summary[:100] + "..."
+            else:
+                summary = "暂无摘要"
 
             if title:
                 news_list.append({
