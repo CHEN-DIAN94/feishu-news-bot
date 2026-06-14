@@ -31,20 +31,68 @@ def fetch_news() -> list[dict]:
     # response = requests.get("https://api.example.com/news")
     # return response.json()["data"]
 
-    # 模拟数据 - 今日新闻
+    # 模拟数据 - 今日新闻（包含标题、链接和摘要）
     mock_news = [
-        {"title": "中国成功发射新一代载人飞船试验船", "url": "https://example.com/news/1"},
-        {"title": "全国高考成绩陆续公布，多地分数线出炉", "url": "https://example.com/news/2"},
-        {"title": "人工智能技术在医疗领域取得重大突破", "url": "https://example.com/news/3"},
-        {"title": "新能源汽车销量创历史新高", "url": "https://example.com/news/4"},
-        {"title": "央行宣布降准0.5个百分点", "url": "https://example.com/news/5"},
-        {"title": "国产大飞机C919首次商业飞行成功", "url": "https://example.com/news/6"},
-        {"title": "全国多地迎来高温天气，部分地区超40℃", "url": "https://example.com/news/7"},
-        {"title": "5G基站数量突破300万个", "url": "https://example.com/news/8"},
-        {"title": "教育部门发布新课标改革方案", "url": "https://example.com/news/9"},
-        {"title": "我国科学家在量子计算领域取得新进展", "url": "https://example.com/news/10"},
-        {"title": "国际油价持续上涨，国内油价将调整", "url": "https://example.com/news/11"},
-        {"title": "北京冬奥会遗产利用计划公布", "url": "https://example.com/news/12"},
+        {
+            "title": "中国成功发射新一代载人飞船试验船",
+            "url": "https://example.com/news/1",
+            "summary": "长征五号B运载火箭搭载新一代载人飞船试验船在海南文昌航天发射场成功升空，标志着中国载人航天工程进入新阶段。"
+        },
+        {
+            "title": "全国高考成绩陆续公布，多地分数线出炉",
+            "url": "https://example.com/news/2",
+            "summary": "全国各省份高考成绩查询通道陆续开放，多省市已公布各批次录取分数线，考生可通过官方渠道查询。"
+        },
+        {
+            "title": "人工智能技术在医疗领域取得重大突破",
+            "url": "https://example.com/news/3",
+            "summary": "最新研究表明，AI辅助诊断系统在早期癌症筛查中准确率超过95%，有望大幅提高疾病早期发现率。"
+        },
+        {
+            "title": "新能源汽车销量创历史新高",
+            "url": "https://example.com/news/4",
+            "summary": "上月国内新能源汽车销量突破100万辆，同比增长45%，市场渗透率首次超过50%。"
+        },
+        {
+            "title": "央行宣布降准0.5个百分点",
+            "url": "https://example.com/news/5",
+            "summary": "中国人民银行决定下调金融机构存款准备金率0.5个百分点，释放长期资金约1万亿元，支持实体经济发展。"
+        },
+        {
+            "title": "国产大飞机C919首次商业飞行成功",
+            "url": "https://example.com/news/6",
+            "summary": "中国东方航空使用C919大型客机执飞上海虹桥-北京首都航线，圆满完成首次商业载客飞行任务。"
+        },
+        {
+            "title": "全国多地迎来高温天气，部分地区超40℃",
+            "url": "https://example.com/news/7",
+            "summary": "中央气象台继续发布高温橙色预警，华北、黄淮等地最高气温将达38-40℃，局地超过40℃。"
+        },
+        {
+            "title": "5G基站数量突破300万个",
+            "url": "https://example.com/news/8",
+            "summary": "工信部最新数据显示，我国已建成5G基站超过300万个，5G用户数突破8亿，网络规模全球领先。"
+        },
+        {
+            "title": "教育部门发布新课标改革方案",
+            "url": "https://example.com/news/9",
+            "summary": "教育部印发新版义务教育课程方案，强化科学教育和工程教育，培养学生创新能力和实践能力。"
+        },
+        {
+            "title": "我国科学家在量子计算领域取得新进展",
+            "url": "https://example.com/news/10",
+            "summary": "中国科学技术大学团队成功研制出超导量子计算原型机"祖冲之三号"，性能指标达到国际领先水平。"
+        },
+        {
+            "title": "国际油价持续上涨，国内油价将调整",
+            "url": "https://example.com/news/11",
+            "summary": "受地缘政治因素影响，国际原油价格连续三周上涨，国内成品油价格预计下周将迎来年内第六次上调。"
+        },
+        {
+            "title": "北京冬奥会遗产利用计划公布",
+            "url": "https://example.com/news/12",
+            "summary": "北京市发布冬奥遗产利用方案，国家体育场等场馆将向公众开放，并承办国际顶级赛事和文化活动。"
+        },
     ]
 
     # 严格截取前10条
@@ -107,9 +155,10 @@ def build_feishu_card_news(news_list: list[dict]) -> dict:
 
     # 新闻列表
     for i, news in enumerate(news_list, 1):
+        summary = news.get('summary', '暂无摘要')
         elements.append({
             "tag": "markdown",
-            "content": f"**{i}.** [{news['title']}]({news['url']})"
+            "content": f"**{i}.** [{news['title']}]({news['url']})\n<font color='grey'>{summary}</font>"
         })
 
     elements.append({"tag": "hr"})
